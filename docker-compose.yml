@@ -9,3 +9,15 @@ services:
       ENABLE_WRITING_HANDLERS: 'false'
     ports:
       - '9000:9000'
+
+
+  mongodb:
+    image: mongo:8.0-rc
+    container_name: mongodb
+    environment:
+        - MONGO_INITDB_ROOT_USERNAME=admin
+        - MONGO_INITDB_ROOT_PASSWORD=secret
+    networks:
+        - api-network
+    volumes:
+         - data:/data/db
