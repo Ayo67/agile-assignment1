@@ -27,3 +27,21 @@ services:
         - api-network
     volumes:
          - data:/data/db
+
+
+  mongo-express:
+     container_name: express
+     image: mongo-express:1.0-20-alpine3.19
+     restart: always # fixes MongoNetworkError caused by mongodb not being ready when mongo-express starts.
+     ports:
+        - 8080:8081
+     environment:
+        - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+        - ME_CONFIG_MONGODB_ADMINPASSWORD=secret
+        - ME_CONFIG_MONGODB_SERVER=mongodb
+     networks:
+        - api-network
+     depends_on:
+            - mongodb
+
+         
