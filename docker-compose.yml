@@ -1,4 +1,3 @@
-version: '3'
 networks:
   api-network:
     external: true
@@ -9,9 +8,9 @@ services:
     image: doconnor/movies-api:1.0
     container_name: movies-api
     environment:
-      MONGODB_URI: mongodb://root:example@mongo:27017
-      REDIS_URI: redis://redis:6379
-      ENABLE_WRITING_HANDLERS: 'false'
+     - MONGODB_URI=mongodb://${MONGODB_USERNAME}:${MONGODB_PASSWORD}@mongodb:27017
+     - REDIS_URI=redis://redis
+     - ENABLE_WRITING_HANDLERS=false
     ports:
       - '9000:9000'
     networks:
@@ -19,28 +18,27 @@ services:
     depends_on:
       - mongodb
       - redis
-    restart: always
 
   mongodb:
     image: mongo:8.0-rc
     container_name: mongodb
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=secret
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
     networks:
       - api-network
     volumes:
-      - data:/data/db
+      - mongodb_data:/data/db
 
   mongo-express:
     container_name: express
     image: mongo-express:1.0-20-alpine3.19
     restart: always # fixes MongoNetworkError caused by mongodb not being ready when mongo-express starts.
     ports:
-      - 8080:8081
+      - 8081:8081
     environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=secret
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGODB_USERNAME}
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGODB_PASSWORD}
       - ME_CONFIG_MONGODB_SERVER=mongodb
     networks:
       - api-network
@@ -49,12 +47,13 @@ services:
 
   redis:
     image: redis:alpine
+    container_name: redis
     ports:
       - "6379:6379"
     networks:
       - api-network
 
-  mongodb-seeding:
+  mongodb-seed:
     image: mongo:8.0-rc
     container_name: mongodb-seed
     depends_on:
@@ -62,23 +61,22 @@ services:
     networks:
       - api-network
     volumes:
-      - ./seeding.json:/mongodb-init/seeding.json
+      - ./seeding.json:/seeding.json
     links:
       - mongodb
     command: >
-      mongoimport --host mongodb \
-                  --db tmdb_movies \
-                  --collection movies \
-                  --authenticationDatabase admin \
-                  --username admin \
-                  --password secret \
-                  --drop \
-                  --jsonArray \
-                  --file /mongodb-init/seeding.json
-    restart: "no"  # Run the seeder once and exit
+      mongoimport --host mongodb
+                  --db tmdb_movies
+                  --collection movies
+                  --authenticationDatabase admin
+                  --username ${MONGODB_USERNAME}
+                  --password ${MONGODB_PASSWORD}
+                  --drop
+                  --jsonArray
+                  --file /seeding.json
 
 volumes:
-  data:
+  mongodb_data:
 
 
 
