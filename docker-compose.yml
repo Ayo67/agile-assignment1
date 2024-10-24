@@ -2,6 +2,7 @@ networks:
   api-network:
     external: true
     name: "mongo-network"
+  
 
 services:
   api:
@@ -74,7 +75,8 @@ services:
                   --drop
                   --jsonArray
                   --file /seeding.json
-
+    profiles:
+      - dev
 volumes:
   mongodb_data:
 
