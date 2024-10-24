@@ -2,20 +2,23 @@ networks:
   api-network:
     external: true
     name: "mongo-network"
-  
+  mongodb-network:
+  redis-network:
+
 
 services:
   api:
     image: doconnor/movies-api:1.0
     container_name: movies-api
     environment:
-     - MONGODB_URI=mongodb://admin:secret@mongodb:27017
-     - REDIS_URI=redis://redis:6379
-     - ENABLE_WRITING_HANDLERS=false
+      - MONGODB_URI=mongodb://admin:secret@mongodb:27017
+      - REDIS_URI=redis://redis:6379
+      - ENABLE_WRITING_HANDLERS=false
     ports:
       - '9000:9000'
     networks:
       - api-network
+      - redis-network
     depends_on:
       - mongodb
       - redis
@@ -28,6 +31,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=secret
     networks:
       - api-network
+      - mongodb-network
     volumes:
       - mongodb_data:/data/db
 
@@ -42,9 +46,11 @@ services:
       - ME_CONFIG_MONGODB_ADMINPASSWORD=secret
       - ME_CONFIG_MONGODB_SERVER=mongodb
     networks:
-      - api-network
+      - mongodb-network
     depends_on:
       - mongodb
+    profiles:
+      - dev
 
   redis:
     image: redis:alpine
@@ -52,7 +58,7 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - api-network
+      - redis-network
 
   mongodb-seed:
     image: mongo:8.0-rc
@@ -60,7 +66,7 @@ services:
     depends_on:
       - mongodb
     networks:
-      - api-network
+      - mongodb-network
     volumes:
       - ./seeding.json:/seeding.json
     links:
@@ -77,9 +83,6 @@ services:
                   --file /seeding.json
     profiles:
       - dev
+
 volumes:
   mongodb_data:
-
-
-
-         
